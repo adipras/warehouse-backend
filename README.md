@@ -8,7 +8,7 @@ Sistem manajemen gudang sederhana menggunakan **Golang Gin** & **MySQL**.
 
 ### **1.1 Clone Repository**
 ```sh
-git clone https://github.com/yourusername/warehouse-backend.git
+git clone https://github.com/adipras/warehouse-backend.git
 cd warehouse-backend
 ```
 
