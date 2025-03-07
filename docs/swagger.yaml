@@ -1,0 +1,389 @@
+basePath: /api
+definitions:
+  models.CreateProductResponse:
+    properties:
+      message:
+        example: Product created successfully
+        type: string
+    type: object
+  models.DeleteProductResponse:
+    properties:
+      message:
+        example: Product deleted successfully
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        example: Bad Request
+        type: string
+    type: object
+  models.LoginCredentials:
+    properties:
+      email:
+        example: admin1@email.com
+        type: string
+      password:
+        example: bismillah
+        type: string
+    type: object
+  models.ProductSwagger:
+    description: Product represents a product in the warehouse
+    properties:
+      location:
+        example: Rak 1
+        type: string
+      name:
+        example: Produk A
+        type: string
+      quantity:
+        example: 100
+        type: integer
+      status:
+        example: available
+        type: string
+    type: object
+  models.UserSwagger:
+    properties:
+      email:
+        example: mail@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: password123
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API untuk mengelola gudang sederhana.
+  title: Simple Warehouse API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login dengan email dan password
+      parameters:
+      - description: User Credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Membuat akun user baru
+      parameters:
+      - description: User Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserSwagger'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Registrasi user baru
+      tags:
+      - Auth
+  /dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil total stok, jumlah produk, dan daftar produk dengan stok
+        rendah
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Mendapatkan ringkasan stok gudang
+      tags:
+      - Dashboard
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Get all products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ProductSwagger'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all products
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: Create a new product with the input payload
+      parameters:
+      - description: Product JSON
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductSwagger'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.CreateProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new product
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DeleteProductResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a product
+      tags:
+      - Products
+    get:
+      consumes:
+      - application/json
+      description: Get a product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductSwagger'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a product by ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Update a product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Product JSON
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductSwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CreateProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a product
+      tags:
+      - Products
+  /products/barcode/{sku}:
+    get:
+      description: Mengembalikan gambar barcode berdasarkan SKU
+      parameters:
+      - description: Product SKU
+        in: path
+        name: sku
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Ambil barcode produk
+      tags:
+      - Products
+  /products/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Menyimpan data produk dalam jumlah banyak menggunakan JSON array
+      parameters:
+      - description: Daftar Produk
+        in: body
+        name: products
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/models.ProductSwagger'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Menambahkan banyak produk sekaligus
+      tags:
+      - Products
+  /products/export:
+    get:
+      consumes:
+      - application/json
+      description: Mengunduh daftar produk dalam format CSV
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: File CSV
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Ekspor daftar produk ke CSV
+      tags:
+      - Products
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

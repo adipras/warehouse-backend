@@ -1,0 +1,53 @@
+# Binaries untuk program dan dependensi
+bin/
+dist/
+
+# Direktori output dari `go build`
+out/
+
+# File biner yang dihasilkan
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Direktori cache Go
+go-build/
+
+# Direktori modul Go
+go-mod/
+
+# File environment
+.env
+.env.local
+
+# Direktori vendor (jika menggunakan Go Modules, biasanya tidak diperlukan)
+vendor/
+
+# File log
+*.log
+
+# Direktori IDE
+.idea/
+.vscode/
+
+# File hasil testing
+*.test
+*.out
+
+# File coverage
+coverage.txt
+coverage.out
+
+# File hasil profiling
+*.prof
+
+# Direktori untuk dependency management (jika menggunakan dep)
+pkg/
+
+# Direktori untuk menyimpan file barcodes
+storage/
+
+# File hasil build dengan `go build`
+build/
