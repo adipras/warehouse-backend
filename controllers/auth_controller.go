@@ -1,7 +1,8 @@
 package controllers
 
 import (
-	"fmt"
+	"errors"
+	"log"
 	"net/http"
 	"warehouse-backend/database"
 	"warehouse-backend/models"
@@ -74,10 +75,25 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
+	// Pastikan database siap digunakan
+	if database.DB == nil {
+		log.Fatal("Database connection is not initialized")
+	}
+
 	var user models.User
-	if err := database.DB.Where("email = ?", credentials.Email).First(&user).Error; err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	err := database.DB.Where("email = ?", credentials.Email).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		} else {
+			log.Println("Database error:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
+
+	if user.ID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
 		return
 	}
 

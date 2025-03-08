@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 	"warehouse-backend/database"
 	"warehouse-backend/models"
 	"warehouse-backend/routes"
 
 	_ "warehouse-backend/docs"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -35,6 +37,12 @@ func runMigrations() error {
 // @in header
 // @name Authorization
 func main() {
+	// Inisialisasi database
+	database.Connect()
+	if database.DB == nil {
+		log.Fatal("Database connection is not initialized")
+	}
+
 	// Cek argumen CLI untuk migrasi
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
 		runMigrations()
@@ -43,6 +51,16 @@ func main() {
 
 	// Inisialisasi router
 	r := gin.Default()
+
+	// Middleware CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // Ganti sesuai domain frontend
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Inisialisasi Swagger API Documentation
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
