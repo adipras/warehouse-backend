@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/csv"
+	"fmt"
 	"net/http"
 	"strconv"
 	"warehouse-backend/database"
@@ -328,6 +329,14 @@ func DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	database.DB.Delete(&product)
+	if err := database.DB.Delete(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Failed to delete product"})
+		return
+	}
+
+	if err := utils.DeleteBarcode(product.SKU); err != nil {
+		fmt.Printf("Warning: Failed to delete barcode image for SKU %s: %v\n", product.SKU, err)
+	}
+
 	c.JSON(http.StatusOK, models.DeleteProductResponse{Message: "Product deleted successfully"})
 }

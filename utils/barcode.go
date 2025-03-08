@@ -47,3 +47,21 @@ func GenerateBarcode(sku string) (string, error) {
 
 	return filePath, nil
 }
+
+// DeleteBarcode removes the barcode image file for a given SKU
+func DeleteBarcode(sku string) error {
+	barcodePath := filepath.Join("storage/barcodes", sku+".png")
+
+	// Check if file exists before attempting to delete
+	if _, err := os.Stat(barcodePath); os.IsNotExist(err) {
+		return nil // Return nil if file doesn't exist
+	}
+
+	// Delete the barcode file
+	err := os.Remove(barcodePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
