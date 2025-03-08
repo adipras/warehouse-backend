@@ -47,6 +47,60 @@ func BulkInsertProducts(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Produk berhasil ditambahkan"})
 }
 
+type StockUpdateRequest struct {
+	Change int `json:"change"`
+}
+
+// UpdateStock godoc
+// @Summary Update stock of a product
+// @Description Change the quantity of a product by a specified amount
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Param body body StockUpdateRequest true "Stock change request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /products/{id}/stock [put]
+// @Security BearerAuth
+func UpdateStock(c *gin.Context) {
+	id := c.Param("id")
+	var request StockUpdateRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	var product models.Product
+	db := database.GetDB()
+	if err := db.First(&product, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	product.Quantity += request.Change
+	if product.Quantity < 0 {
+		product.Quantity = 0
+	}
+	if product.Quantity == 0 {
+		product.Status = "Out of Stock"
+	} else if product.Quantity > 0 && product.Quantity < 10 {
+		product.Status = "Low Stock"
+	} else {
+		product.Status = "Available"
+	}
+
+	if err := db.Save(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update stock"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Stock updated", "quantity": product.Quantity})
+}
+
 // CreateProduct godoc
 // @Summary Create a new product
 // @Description Create a new product with the input payload
@@ -61,9 +115,16 @@ func BulkInsertProducts(c *gin.Context) {
 // @Router /products [post]
 func CreateProduct(c *gin.Context) {
 	var product models.Product
+
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 		return
+	}
+	product.Status = "Available"
+	if product.Quantity == 0 {
+		product.Status = "Out of Stock"
+	} else if product.Quantity > 0 && product.Quantity < 10 {
+		product.Status = "Low Stock"
 	}
 
 	// Generate SKU otomatis
@@ -184,13 +245,6 @@ func ExportProductsCSV(c *gin.Context) {
 	}
 }
 
-// DashboardResponse untuk format response dashboard
-type DashboardResponse struct {
-	TotalStock    int              `json:"total_stock"`
-	TotalProducts int64            `json:"total_products"`
-	LowStockItems []models.Product `json:"low_stock_items"`
-}
-
 // GetStockDashboard godoc
 // @Summary Mendapatkan ringkasan stok gudang
 // @Description Mengambil total stok, jumlah produk, dan daftar produk dengan stok rendah
@@ -200,26 +254,26 @@ type DashboardResponse struct {
 // @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /dashboard [get]
+// @Router /products/dashboard [get]
 func GetStockDashboard(c *gin.Context) {
-	var totalStock int
 	var totalProducts int64
-	var lowStockItems []models.Product
+	var outOfStock int64
+	var lowStock int64
 
-	// Hitung total stok dari semua produk
-	database.DB.Model(&models.Product{}).Select("SUM(quantity)").Scan(&totalStock)
-
-	// Hitung jumlah jenis produk
 	database.DB.Model(&models.Product{}).Count(&totalProducts)
+	database.DB.Model(&models.Product{}).Where("quantity = 0").Count(&outOfStock)
+	database.DB.Model(&models.Product{}).Where("quantity < ?", 10).Count(&lowStock)
 
-	// Ambil produk dengan stok rendah (misal kurang dari 10)
-	database.DB.Where("quantity < ?", 10).Find(&lowStockItems)
+	var latestProducts []models.Product
+	database.DB.Order("created_at DESC").Limit(5).Find(&latestProducts)
 
-	// Return response
-	c.JSON(http.StatusOK, DashboardResponse{
-		TotalStock:    totalStock,
-		TotalProducts: totalProducts,
-		LowStockItems: lowStockItems,
+	c.JSON(http.StatusOK, gin.H{
+		"summary": gin.H{
+			"totalProducts": totalProducts,
+			"outOfStock":    outOfStock,
+			"lowStock":      lowStock,
+		},
+		"latestProducts": latestProducts,
 	})
 }
 

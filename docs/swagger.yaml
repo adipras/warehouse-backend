@@ -1,5 +1,10 @@
 basePath: /api
 definitions:
+  controllers.StockUpdateRequest:
+    properties:
+      change:
+        type: integer
+    type: object
   models.CreateProductResponse:
     properties:
       message:
@@ -128,32 +133,6 @@ paths:
       summary: Registrasi user baru
       tags:
       - Auth
-  /dashboard:
-    get:
-      consumes:
-      - application/json
-      description: Mengambil total stok, jumlah produk, dan daftar produk dengan stok
-        rendah
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Mendapatkan ringkasan stok gudang
-      tags:
-      - Dashboard
   /products:
     get:
       consumes:
@@ -293,6 +272,51 @@ paths:
       summary: Update a product
       tags:
       - Products
+  /products/{id}/stock:
+    put:
+      consumes:
+      - application/json
+      description: Change the quantity of a product by a specified amount
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Stock change request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.StockUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update stock of a product
+      tags:
+      - Products
   /products/barcode/{sku}:
     get:
       description: Mengembalikan gambar barcode berdasarkan SKU
@@ -358,6 +382,32 @@ paths:
       summary: Menambahkan banyak produk sekaligus
       tags:
       - Products
+  /products/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil total stok, jumlah produk, dan daftar produk dengan stok
+        rendah
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Mendapatkan ringkasan stok gudang
+      tags:
+      - Dashboard
   /products/export:
     get:
       consumes:

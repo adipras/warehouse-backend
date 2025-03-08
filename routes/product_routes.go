@@ -13,9 +13,12 @@ func ProductRoutes(r *gin.Engine) {
 	{
 		productGroup.POST("/", controllers.CreateProduct)
 		productGroup.GET("/", controllers.GetProducts)
+
 		productGroup.GET("/:id", controllers.GetProductByID)
 		productGroup.PUT("/:id", controllers.UpdateProduct)
+		productGroup.PUT("/:id/stock", controllers.UpdateStock)
 		productGroup.DELETE("/:id", controllers.DeleteProduct)
+
 		productGroup.GET("/barcode/:sku", controllers.GetBarcode)
 		productGroup.GET("/export", controllers.ExportProductsCSV)
 		productGroup.GET("/dashboard", controllers.GetStockDashboard)
